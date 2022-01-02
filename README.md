@@ -1,5 +1,5 @@
 # Slang
-## Slang is declarative compiled general purpose language
+## Slang is declarative transpiled general purpose language
 
 
 Start by installing dependencies
