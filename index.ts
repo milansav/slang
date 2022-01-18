@@ -55,10 +55,10 @@ function parse() {
         } else if (tk.isMap(c)) {
             parseMap();
             return;
-        } else if(tk.isIf(c)) {
+        } else if (tk.isIf(c)) {
             parseIf();
             return;
-        } else if(tk.isFor(c)) {
+        } else if (tk.isFor(c)) {
             parseFor();
             return;
         } else if (tk.isIdent(c)) {
@@ -75,7 +75,7 @@ function parse() {
             console.log("variable");
 
             let letName = c;
-            if(getVariable(newMemory, letName)?.type === "reference")
+            if (getVariable(newMemory, letName)?.type === "reference")
                 letName = `*${letName}`;
 
             next();
@@ -88,21 +88,21 @@ function parse() {
                 next();
 
                 //Left side
-                if(tk.isIdent(c)) {
-                    if(variableExists(newMemory, c)) {
+                if (tk.isIdent(c)) {
+                    if (variableExists(newMemory, c)) {
                         firstNum = c;
-                        if(getVariable(newMemory, firstNum)?.type === "reference")
+                        if (getVariable(newMemory, firstNum)?.type === "reference")
                             firstNum = `*${firstNum}`;
                         next();
                     }
-                } else if(tk.isNum(c)) {
+                } else if (tk.isNum(c)) {
                     firstNum = c;
                     next();
                 } else {
                     throw new Error("Unexpected token: " + c);
                 }
 
-                if(tk.isBinOp(c)) {
+                if (tk.isBinOp(c)) {
                     operator = c;
                     next();
 
@@ -110,7 +110,7 @@ function parse() {
                     if (tk.isIdent(c)) {
                         if (variableExists(newMemory, c)) {
                             secondNum = c;
-                            if(getVariable(newMemory, secondNum)?.type === "reference")
+                            if (getVariable(newMemory, secondNum)?.type === "reference")
                                 secondNum = `*${secondNum}`;
                             next();
                         }
@@ -146,6 +146,44 @@ function parse() {
                 throw new Error("Variable doesn't exist: " + letName);
 
             if (variable.type === "number") {
+                addLine(`printf("%d", ${letName});`);
+            } else if (variable.type === "number[]") {
+
+                let iteratorName = "x";
+                while (variableExists(newMemory, iteratorName)) {
+                    iteratorName += randomNumber(0, 9);
+                }
+                // @ts-ignore
+                currentStack = createNewStack(newMemory);
+                // @ts-ignore
+                currentStack.variables[iteratorName] = {type: "number", value: 0};
+
+                addLine(`for(int ${iteratorName} = 0; ${iteratorName} < ${letName}_size; ${iteratorName}++) {`);
+                addLine(`printf("%d", ${letName}[${iteratorName}]);`);
+                addLine(`}`);
+
+                currentStack = removeStack(newMemory);
+
+            } else if (variable.type === "reference") {
+                addLine(`printf("%d", *${letName});`);
+            } else if(variable.type === "string") {
+                addLine(`printf("%s", ${letName});`);
+            }
+        } else if (c === "println") {
+            if (!containsImport("stdio"))
+                addImport("stdio");
+            next();
+
+            console.log("Print: " + c);
+
+            let letName = c;
+
+            let variable = getVariable(newMemory, letName);
+
+            if (!variable)
+                throw new Error("Variable doesn't exist: " + letName);
+
+            if (variable.type === "number") {
                 addLine(`printf("%d\\n", ${letName});`);
             } else if (variable.type === "number[]") {
 
@@ -166,6 +204,8 @@ function parse() {
 
             } else if (variable.type === "reference") {
                 addLine(`printf("%d\\n", *${letName});`);
+            } else if(variable.type === "string") {
+                addLine(`printf("%s\\n", ${letName});`);
             }
         }
 
@@ -190,6 +230,7 @@ function parse() {
         if (tk.isBe(c)) {
             //console.log("Is Be");
             next();
+
             if (tk.isNum(c)) {
                 //console.log("Is Num: " + c);
                 // @ts-ignore
@@ -198,6 +239,34 @@ function parse() {
                 addLine(`int ${letName} = ${c};`);
                 //Nothing else to do, continue
                 next();
+            } else if (tk.isString(c)) {
+                console.log("Itsa me string");
+                next();
+
+                let tempArr = [];
+                let temp = "";
+
+                while (!tk.isString(c)) {
+                    tempArr.push(c);
+                    console.log(`Word: ${c}`);
+                    next();
+                }
+
+                temp = tempArr.join(" ");
+
+                if (tk.isString(c)) {
+                    // @ts-ignore
+                    currentStack.variables[letName] = {type: "string", value: temp};
+                    if (!containsImport("stdlib"))
+                        addImport("stdlib");
+
+                    addLine(`unsigned long long ${letName}_size = ${temp.length};`);
+                    addLine(`char* ${letName} = malloc(${letName}_size);`);
+                    //addLine(`${letName}[${letName}_size-1] = "\\0";`);
+                    addLine(`${letName} = "${temp}";`);
+
+                    next();
+                }
             } else if (tk.isArrayB(c)) {
                 //console.log("Is Array");
                 next();
@@ -288,14 +357,37 @@ function parse() {
         //console.log("Parse Each");
         next();
 
-        if(c === "times") {
+        let letName = "";
+
+        if (tk.isIdent(c)) {
+            if (variableExists(newMemory, c)) throw new Error("Variable already exists!");
+
+            letName = c;
+
+            console.log(letName);
+
+            next();
+
+            if (tk.isIn(c)) {
+                next();
+            }
+
+        }
+
+        if (c === "times") {
             next();
             let times = c;
 
-            let iteratorName = "x";
-            while (variableExists(newMemory, iteratorName)) {
-                iteratorName += randomNumber(0, 9);
+            let iteratorName = "";
+
+            if (letName === "") {
+                iteratorName = "x";
+                while (variableExists(newMemory, iteratorName)) {
+                    iteratorName += randomNumber(0, 9);
+                }
             }
+
+            iteratorName = letName;
 
             addLine(`for(int ${iteratorName} = 0; ${iteratorName} < ${times}; ${iteratorName}++)`);
             addLine("{");
@@ -430,33 +522,33 @@ function parse() {
         let second = "";
         let operator = "";
 
-        if(tk.isIdent(c)) {
+        if (tk.isIdent(c)) {
             if (variableExists(newMemory, c)) {
                 first = c;
-                if(getVariable(newMemory, first)?.type === "reference")
+                if (getVariable(newMemory, first)?.type === "reference")
                     first = `*${first}`;
                 next();
             }
-        } else if(tk.isNum(c)) {
+        } else if (tk.isNum(c)) {
             first = c;
             next();
         } else {
             throw new Error("Unexpected token: " + c);
         }
 
-        if(tk.isBoolOp(c)) {
+        if (tk.isBoolOp(c)) {
             operator = c;
             next();
         }
 
-        if(tk.isIdent(c)) {
+        if (tk.isIdent(c)) {
             if (variableExists(newMemory, c)) {
                 second = c;
-                if(getVariable(newMemory, second)?.type === "reference")
+                if (getVariable(newMemory, second)?.type === "reference")
                     second = `*${second}`;
                 next();
             }
-        } else if(tk.isNum(c)) {
+        } else if (tk.isNum(c)) {
             second = c;
             next();
         } else {

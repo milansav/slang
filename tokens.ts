@@ -10,6 +10,14 @@ const isAs = (test: string): boolean => {
     return test === "as";
 };
 
+const isString = (test: string): boolean => {
+    return test === "'";
+};
+
+const isIn = (test: string): boolean => {
+    return test === "in";
+};
+
 const isEach = (test: string): boolean => {
     return test === "each";
 };
@@ -79,11 +87,11 @@ const isOperator = (test: string): boolean => {
 };
 
 const isBinOp = (test: string): boolean => {
-    return test === "+" || test === "-" || test === "*" || test === "/";
+    return test === "+" || test === "-" || test === "*" || test === "/" || test === "%";
 };
 
 const isBoolOp = (test: string): boolean => {
     return test === "==" || test === ">=" || test === "<=" || test === "!=" || test === ">" || test === "<";
 };
 
-export {isLet, isBe, isAs, isEach, isDotEach, isMap, isDotMap, isFor, isDotFor, isTimes, isMake, isIf, isElse, isElseIf, isDotIf, isArrayB, isArrayE, isNum, isIdent, isOperator, isBinOp, isBoolOp};
+export {isLet, isBe, isAs, isString, isIn, isEach, isDotEach, isMap, isDotMap, isFor, isDotFor, isTimes, isMake, isIf, isElse, isElseIf, isDotIf, isArrayB, isArrayE, isNum, isIdent, isOperator, isBinOp, isBoolOp};
