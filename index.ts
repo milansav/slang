@@ -23,7 +23,10 @@ function randomNumber(min: number, max: number) {
 let sourceCode = readFileSync(process.argv[2], {encoding: "utf-8"});
 
 function tokenize(input: string) {
-    let tokens: string[] = input.split(/\n|\s/);
+    let regex: RegExp = /(\w+)|(\.\w+)|([=+\-*\/%]+)/g;
+    // @ts-ignore
+    let tokens: any = input.match(regex);
+    console.log(tokens);
     return tokens;
 }
 
@@ -166,7 +169,7 @@ function parse() {
 
             } else if (variable.type === "reference") {
                 addLine(`printf("%d", *${letName});`);
-            } else if(variable.type === "string") {
+            } else if (variable.type === "string") {
                 addLine(`printf("%s", ${letName});`);
             }
         } else if (c === "println") {
@@ -204,7 +207,7 @@ function parse() {
 
             } else if (variable.type === "reference") {
                 addLine(`printf("%d\\n", *${letName});`);
-            } else if(variable.type === "string") {
+            } else if (variable.type === "string") {
                 addLine(`printf("%s\\n", ${letName});`);
             }
         }
@@ -396,6 +399,7 @@ function parse() {
             currentStack.variables[iteratorName] = {type: "number", value: 0};
             // @ts-ignore
 
+            console.log(c);
             next();
             do {
                 parseStatement();
