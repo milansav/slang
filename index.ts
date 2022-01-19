@@ -43,7 +43,6 @@ const next = () => {
 function parse() {
 
     const parseStatement = () => {
-        //console.log("Parse Statement");
         console.log(newMemory, currentStack);
         console.log(c);
         if (tk.isLet(c)) {
@@ -216,13 +215,11 @@ function parse() {
     };
 
     const parseLet = () => {
-        //console.log("Parse Let");
         next();
 
         let letName = "";
 
         if (tk.isIdent(c)) {
-            //console.log("Name: " + c);
             letName = c;
         } else {
             throw new Error("Unexpected token: " + c);
@@ -231,11 +228,9 @@ function parse() {
         next();
 
         if (tk.isBe(c)) {
-            //console.log("Is Be");
             next();
 
             if (tk.isNum(c)) {
-                //console.log("Is Num: " + c);
                 // @ts-ignore
                 currentStack.variables[letName] = {type: "number", value: parseInt(c)};
                 // @ts-ignore
@@ -265,24 +260,19 @@ function parse() {
 
                     addLine(`unsigned long long ${letName}_size = ${temp.length};`);
                     addLine(`char* ${letName} = malloc(${letName}_size);`);
-                    //addLine(`${letName}[${letName}_size-1] = "\\0";`);
                     addLine(`${letName} = "${temp}";`);
 
                     next();
                 }
             } else if (tk.isArrayB(c)) {
-                //console.log("Is Array");
                 next();
                 let temp_mem = [];
                 while (tk.isNum(c)) {
-                    //console.log("Num: " + c);
                     temp_mem.push(parseInt(c));
                     next();
                 }
 
                 if (tk.isArrayE(c)) {
-                    //console.log("Is Array End");
-
                     //Nothing else to do continue
                     next();
                 }
@@ -302,24 +292,20 @@ function parse() {
     };
 
     const parseEach = () => {
-        //console.log("Parse Each");
         next();
 
         let targetName = "";
         let letName = "";
 
         if (tk.isIdent(c)) {
-            //console.log("Name: " + c);
             targetName = c;
             next();
 
             if (tk.isAs(c)) {
-                //console.log("Is As");
 
                 next();
 
                 if (tk.isIdent(c)) {
-                    //console.log("Name: " + c);
                     letName = c;
                 }
 
@@ -343,7 +329,6 @@ function parse() {
                 } while (!tk.isDotEach(c));
 
                 if (tk.isDotEach(c)) {
-                    //console.log("Is dot each");
 
                     currentStack = removeStack(newMemory);
 
@@ -357,7 +342,6 @@ function parse() {
     };
 
     const parseFor = () => {
-        //console.log("Parse Each");
         next();
 
         let letName = "";
@@ -406,7 +390,6 @@ function parse() {
             } while (!tk.isDotFor(c));
 
             if (tk.isDotFor(c)) {
-                //console.log("Is dot each");
 
                 currentStack = removeStack(newMemory);
 
@@ -418,24 +401,20 @@ function parse() {
     };
 
     const parseMap = () => {
-        //console.log("Parse Each");
         next();
 
         let targetName = "";
         let letName = "";
 
         if (tk.isIdent(c)) {
-            //console.log("Name: " + c);
             targetName = c;
             next();
 
             if (tk.isAs(c)) {
-                //console.log("Is As");
 
                 next();
 
                 if (tk.isIdent(c)) {
-                    //console.log("Name: " + c);
                     letName = c;
                 }
 
@@ -461,7 +440,6 @@ function parse() {
                 } while (!tk.isDotMap(c));
 
                 if (tk.isDotMap(c)) {
-                    //console.log("Is dot each");
 
                     currentStack = removeStack(newMemory);
 
@@ -474,7 +452,6 @@ function parse() {
     };
 
     const parseMake = () => {
-        //console.log("Parse Make");
         next();
 
         let letName = "";
@@ -494,14 +471,11 @@ function parse() {
                     next();
                     let temp_mem = [];
                     while (tk.isNum(c)) {
-                        //console.log("Num: " + c);
                         temp_mem.push(parseInt(c));
                         next();
                     }
 
                     if (tk.isArrayE(c)) {
-                        //console.log("Is Array End");
-
                         //Nothing else to do continue
                         next();
                     }
