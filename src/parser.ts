@@ -1,13 +1,6 @@
-import {readFile, readFileSync} from "fs";
 import * as tk from "./tokens";
+import {createNewStack, getVariable, Memory, removeStack, Stack, variableExists} from "./memory";
 import {addImport, addLine, buildCode, compile, containsImport} from "./CTranspiler";
-import {createNewStack, getVariable, Memory, removeStack, removeVariable, Stack, variableExists} from "./memory";
-
-interface ConsoleArguments {
-    files: {
-        name: string,
-    }[]
-}
 
 let currentStack: Stack;
 let newMemory: Memory = {
@@ -20,27 +13,16 @@ function randomNumber(min: number, max: number) {
     return Math.floor(Math.random() * (max - min) + min);
 }
 
-let sourceCode = readFileSync(process.argv[2], {encoding: "utf-8"});
+export function parse(tokens: string[]) {
 
-function tokenize(input: string) {
-    let regex: RegExp = /(\w+)|(\.\w+)|([=+\-*\/%]+)/g;
-    // @ts-ignore
-    let tokens: any = input.match(regex);
-    console.log(tokens);
-    return tokens;
-}
-
-let tokens: string[] = tokenize(sourceCode);
-let x = 0;
-let c = tokens[x];
-let n = tokens[x + 1];
-const next = () => {
-    x++;
-    c = tokens[x];
-    n = tokens[x + 1];
-};
-
-function parse() {
+    let x = 0;
+    let c = tokens[x];
+    let n = tokens[x + 1];
+    const next = () => {
+        x++;
+        c = tokens[x];
+        n = tokens[x + 1];
+    };
 
     const parseStatement = () => {
         console.log(newMemory, currentStack);
@@ -63,12 +45,50 @@ function parse() {
         } else if (tk.isFor(c)) {
             parseFor();
             return;
+        } else if (tk.isFunction(c)) {
+            parseFunction();
         } else if (tk.isIdent(c)) {
             parseIdent();
             return;
         } else {
             throw new Error("Unexpected token: " + c);
         }
+    };
+
+    const parseFunction = () => {
+        next();
+
+        if (!tk.isIdent(c))
+            throw new Error("Unexpected token: " + c);
+
+        let functionName = c;
+
+        next();
+
+        if(!tk.isBeginArray(c))
+            throw new Error("Unexpected token: " + c);
+
+        next();
+
+        let temp_mem = [];
+
+        while(!tk.isEndArray(c)) {
+            temp_mem.push(c);
+            next();
+        }
+        next();
+
+        if(!tk.isBeginBody(c))
+            throw new Error("Unexpected token: " + c);
+
+        next();
+
+        while(!tk.isEndBody(c))
+        {
+            parseStatement();
+        }
+
+        next();
     };
 
     const parseIdent = () => {
@@ -227,7 +247,7 @@ function parse() {
 
         next();
 
-        if (tk.isBe(c)) {
+        if (tk.isInitialize(c)) {
             next();
 
             if (tk.isNum(c)) {
@@ -264,7 +284,7 @@ function parse() {
 
                     next();
                 }
-            } else if (tk.isArrayB(c)) {
+            } else if (tk.isBeginArray(c)) {
                 next();
                 let temp_mem = [];
                 while (tk.isNum(c)) {
@@ -272,7 +292,7 @@ function parse() {
                     next();
                 }
 
-                if (tk.isArrayE(c)) {
+                if (tk.isEndArray(c)) {
                     //Nothing else to do continue
                     next();
                 }
@@ -284,7 +304,9 @@ function parse() {
 
                 addLine(`unsigned long long ${letName}_size = ${temp_mem.length};`);
                 addLine(`int* ${letName} = malloc(sizeof(int) * ${letName}_size);`);
-                addLine(`${letName} = (int[]){${temp_mem.join(',')}};`)
+                for(let i = 0; i < temp_mem.length; i++) {
+                    addLine(`${letName}[${i}] = ${temp_mem[i]};`);
+                }
             }
         } else {
             throw new Error("Unexpected token: " + c);
@@ -314,6 +336,10 @@ function parse() {
                     iteratorName += randomNumber(0, 9);
                 }
 
+                next();
+
+                if(tk.isBeginBody(c))
+
                 addLine(`for(int ${iteratorName} = 0; ${iteratorName} < ${targetName}_size; ${iteratorName}++)`);
                 addLine("{");
                 currentStack = createNewStack(newMemory);
@@ -326,9 +352,9 @@ function parse() {
                 next();
                 do {
                     parseStatement();
-                } while (!tk.isDotEach(c));
+                } while (!tk.isEndBody(c));
 
-                if (tk.isDotEach(c)) {
+                if (tk.isEndBody(c)) {
 
                     currentStack = removeStack(newMemory);
 
@@ -397,7 +423,9 @@ function parse() {
                 //finish each loop and continue
                 next();
             }
-        }
+        }/* else if (tk.isIdent(c)) {
+
+        }*/
     };
 
     const parseMap = () => {
@@ -562,5 +590,3 @@ function parse() {
     let code = buildCode();
     compile(code).then(() => console.log("Finished compiling"));
 }
-
-parse();
