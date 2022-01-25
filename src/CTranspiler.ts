@@ -1,16 +1,15 @@
+export type SFunction = {
+    name: string,
+    returnType: String,
+    lines: string[],
+    parameters: string[]
+};
+
 let imports: string[] = [];
 
-let CMainStart: string[] = [
-    "int main(int argc, char** argv)",
-    "{",
-];
+let functions: SFunction[] = [{name: "Mrdka", returnType: "void", parameters: [], lines: []}];
 
-let CMainEnd: string[] = [
-  "return 0;",
-  "}"
-];
-
-let lines: string[] = [];
+let lines: SFunction[] = [];
 
 export function addImport(name: string) {
     imports.push(name);
@@ -21,15 +20,40 @@ export function containsImport(name: string): boolean {
 }
 
 export function addLine(line: string) {
-    lines.push(line);
+    lines[lines.length-1].lines.push(line);
+}
+
+export function createFunction(func: SFunction): SFunction {
+    functions.push(func);
+    return functions[functions.length-1];
+}
+
+export function pushFunction(func: SFunction) {
+    lines.push(func);
+}
+
+export function popFunction() {
+    lines.pop();
 }
 
 export function buildCode() {
-    let imp = imports.map(item => item = `#include <${item}.h>`).join("\n");
-    let cmb = CMainStart.join("\n");
-    let l = lines.join("\n");
-    let cme = CMainEnd.join("\n");
-    return imp + "\n" + cmb + "\n" + l + "\n" + cme;
+    let imp: string = imports.map(item => item = `#include <${item}.h>`).join("\n");
+    let funcDeclarations: string[] = [];
+    functions.forEach(func => {
+        funcDeclarations.push(`${func.returnType} ${func.name}(${func.parameters.join(", ")});`);
+    });
+    console.log(funcDeclarations);
+    let funcImplementations: string[] = [];
+
+    functions.forEach(func => {
+        let _func: string[] = [];
+        _func.push(`${func.returnType} ${func.name}(${func.parameters.join(", ")}) {`);
+        _func.push(func.lines.join("\n"));
+        _func.push("}");
+        funcImplementations.push(_func.join("\n"));
+    });
+
+    return imp + '\n' + funcDeclarations.join("\n") + "\n" + funcImplementations.join("\n");
 }
 
 export async function compile(code: string) {

@@ -22,10 +22,6 @@ export const isEach = (test: string): boolean => {
     return test === "each";
 };
 
-export const isDotEach = (test: string): boolean => {
-    return test === ".each";
-};
-
 export const isMap = (test: string): boolean => {
     return test === "map";
 };
@@ -64,10 +60,6 @@ export const isElseIf = (test: string): boolean => {
 
 export const isFunction = (test: string): boolean => {
     return test === "func";
-};
-
-export const isDotFunction = (test: string): boolean => {
-    return test === ".func";
 };
 
 export const isExtern = (test: string): boolean => {
@@ -124,4 +116,12 @@ export const isBeginBody = (test: string): boolean => {
 
 export const isEndBody = (test: string): boolean => {
     return test === "}";
+};
+
+export const isStruct = (test: string): boolean => {
+    return test === "struct";
+};
+
+export const isTrait = (test: string): boolean => {
+    return test === "trait";
 };

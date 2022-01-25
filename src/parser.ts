@@ -1,6 +1,15 @@
 import * as tk from "./tokens";
 import {createNewStack, getVariable, Memory, removeStack, Stack, variableExists} from "./memory";
-import {addImport, addLine, buildCode, compile, containsImport} from "./CTranspiler";
+import {
+    addImport,
+    addLine,
+    buildCode,
+    compile,
+    containsImport,
+    createFunction, popFunction,
+    pushFunction,
+    SFunction
+} from "./CTranspiler";
 
 let currentStack: Stack;
 let newMemory: Memory = {
@@ -58,6 +67,8 @@ export function parse(tokens: string[]) {
     const parseFunction = () => {
         next();
 
+        //TODO: create new stack for function
+
         if (!tk.isIdent(c))
             throw new Error("Unexpected token: " + c);
 
@@ -70,10 +81,10 @@ export function parse(tokens: string[]) {
 
         next();
 
-        let temp_mem = [];
+        let parameters = [];
 
         while(!tk.isEndArray(c)) {
-            temp_mem.push(c);
+            parameters.push(c);
             next();
         }
         next();
@@ -81,12 +92,16 @@ export function parse(tokens: string[]) {
         if(!tk.isBeginBody(c))
             throw new Error("Unexpected token: " + c);
 
+        let _func: SFunction = createFunction({name: functionName, returnType: "void", lines: [], parameters: parameters});
+        pushFunction(_func);
+
         next();
 
-        while(!tk.isEndBody(c))
-        {
+        while(!tk.isEndBody(c)) {
             parseStatement();
         }
+
+        popFunction();
 
         next();
     };
@@ -387,7 +402,7 @@ export function parse(tokens: string[]) {
 
         }
 
-        if (c === "times") {
+        if (tk.isTimes(c)) {
             next();
             let times = c;
 
@@ -580,6 +595,9 @@ export function parse(tokens: string[]) {
         }
 
     };
+
+    let mainFunc: SFunction = createFunction({name: "main", returnType: "int", parameters: ["int argc", "char** argv"], lines: []});
+    pushFunction(mainFunc);
 
     while (tokens[x]) {
         parseStatement();
